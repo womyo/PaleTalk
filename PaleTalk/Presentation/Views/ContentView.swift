@@ -24,23 +24,42 @@ struct ContentView: View {
 
 struct CustomTabView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var drawingViewModel: DrawingViewModel
     @State private var selection = 0
-
+    @State private var isReady = false
+    
+    init() {
+        let appearence = UITabBarAppearance()
+        appearence.configureWithOpaqueBackground()
+        appearence.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+        
+        UITabBar.appearance().standardAppearance = appearence
+        UITabBar.appearance().scrollEdgeAppearance = appearence
+    }
     var body: some View {
-        TabView(selection: $selection) {
-            EmptyView()
-                .tabItem {
-                    Image(systemName: "house")
-                    Text("Home")
+        if isReady {
+            TabView(selection: $selection) {
+                HomeView()
+                    .tabItem {
+                        Image(systemName: "house")
+                        Text("Home")
+                    }
+                    .tag(0)
+                
+                SettingView()
+                    .tabItem {
+                        Image(systemName: "gear")
+                        Text("Setting")
+                    }
+                    .tag(1)
+            }
+        } else {
+            Color.clear // splashview
+                .task {
+                    await drawingViewModel.getTodayDrawings(userId: authViewModel.currentUser?.uid)
+                    await drawingViewModel.getMyDrawing(userId: authViewModel.currentUser?.uid)
+                    isReady = true
                 }
-                .tag(0)
-            
-            SettingView()
-                .tabItem {
-                    Image(systemName: "gear")
-                    Text("Setting")
-                }
-                .tag(1)
         }
     }
 }
