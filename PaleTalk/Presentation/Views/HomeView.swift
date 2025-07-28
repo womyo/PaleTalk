@@ -15,7 +15,23 @@ struct HomeView: View {
     var body: some View {
         ZStack {
             if whichView {
-                NightskyView(whichView: $whichView)
+                TabView {
+                    if drawingViewModel.pagedDrawings.isEmpty {
+                        NightskyView(whichView: $whichView, pageIndex: 0)
+                    } else {
+                        ForEach(0..<drawingViewModel.pagedDrawings.count, id: \.self) { index in
+                            NightskyView(whichView: $whichView, pageIndex: index)
+                        }
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background {
+                    Image("Home")
+                        .resizable()
+                        .scaledToFill()
+                        .ignoresSafeArea()
+                }
             } else {
                 PaletteView(whichView: $whichView)
                     .transition(.asymmetric(
