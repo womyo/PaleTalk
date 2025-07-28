@@ -11,14 +11,20 @@ struct ContentView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     
     var body: some View {
-        switch authViewModel.loginStatus {
-        case .googleSignedIn, .appleSignedIn:
-            CustomTabView()
-        case .signedOut:
-            SignInView()
-        case .initializing:
-            EmptyView()
+        Group {
+            switch authViewModel.loginStatus {
+            case .signedOut:
+                NavigationStack {
+                    SignInView()
+                }
+            case .googleSignedIn, .appleSignedIn:
+                CustomTabView()
+                    .transition(.move(edge: .trailing))
+            case .initializing:
+                EmptyView()
+            }
         }
+        .animation(.easeInOut(duration: 0.3), value: authViewModel.loginStatus)
     }
 }
 
@@ -31,7 +37,7 @@ struct CustomTabView: View {
     init() {
         let appearence = UITabBarAppearance()
         appearence.configureWithOpaqueBackground()
-        appearence.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+        appearence.backgroundColor = UIColor.black.withAlphaComponent(0.3)
         
         UITabBar.appearance().standardAppearance = appearence
         UITabBar.appearance().scrollEdgeAppearance = appearence
@@ -56,8 +62,10 @@ struct CustomTabView: View {
         } else {
             Color.clear // splashview
                 .task {
-                    await drawingViewModel.getTodayDrawings(userId: authViewModel.currentUser?.uid)
-                    await drawingViewModel.getMyDrawing(userId: authViewModel.currentUser?.uid)
+                    await authViewModel.getUser()
+                    
+                    await drawingViewModel.getTodayDrawings(userId: authViewModel.currentUserId)
+                    await drawingViewModel.getMyDrawing(userId: authViewModel.currentUserId)
                     isReady = true
                 }
         }
@@ -67,4 +75,3 @@ struct CustomTabView: View {
 #Preview {
     ContentView()
 }
-
