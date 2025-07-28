@@ -14,78 +14,101 @@ struct StarAnimValues {
 }
 
 struct NightskyView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var drawingViewModel: DrawingViewModel
     @Binding var whichView: Bool
     @State var isSheetPresented: Bool = false
+    @State var isInAnimation: Bool? = nil
+    var pageIndex: Int
     
     var body: some View {
+        let array = drawingViewModel.pagedDrawings.isEmpty ? [] : Array(drawingViewModel.pagedDrawings[pageIndex].enumerated())
+        
         VStack {
             ZStack {
-                ForEach(Array(drawingViewModel.drawingList.enumerated()), id: \.element) { index, drawing in
+                ForEach(array, id: \.element) { index, drawing in
                     let offset = drawingViewModel.fixedOffsets[index]
                     
                     Button {
                         isSheetPresented = true
                         drawingViewModel.selectedDrawing = drawing
+                        
+                        Task {
+                            await drawingViewModel.updateViewers(userId: authViewModel.currentUserId, drawingId: drawing.id)
+                            drawingViewModel.pagedDrawings[pageIndex][index].viewers.append(authViewModel.currentUserId)
+                        }
                     } label: {
-                        Image("Star")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 30, height: 30)
+                        if drawing.viewers.contains(authViewModel.currentUserId) {
+                            Image(systemName: "star.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .foregroundStyle(.blue)
+                                .frame(width: 30, height: 30)
+                        } else {
+                            Image("Star")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                        }
                     }
                     .offset(x: offset.x, y: offset.y)
                 }
                 
-                ShootingStarView()
-                
-                if let myDrawing = drawingViewModel.myDrawing {
-                    Button {
-                        isSheetPresented = true
-                        drawingViewModel.selectedDrawing = myDrawing
-                    } label: {
-                        Image("Star")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 30, height: 30)
+                // 홈 화면 맨 처음일때만
+                if pageIndex == 0 {
+                    shootingStarView
+                    
+                    if let myDrawing = drawingViewModel.myDrawing, (isInAnimation == nil || isInAnimation == false) {
+                        Button {
+                            isSheetPresented = true
+                            drawingViewModel.selectedDrawing = myDrawing
+                            
+                            Task {
+                                await drawingViewModel.updateViewers(userId: authViewModel.currentUserId, drawingId: myDrawing.id)
+                                drawingViewModel.myDrawing?.viewers.append(authViewModel.currentUserId)
+                            }
+                        } label: {
+                            if myDrawing.viewers.contains(authViewModel.currentUserId) {
+                                Image(systemName: "star.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .foregroundStyle(.blue)
+                                    .frame(width: 30, height: 30)
+                            } else {
+                                Image("Star")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 100, height: 100)
+                            }
+                        }
+                        .offset(y: 0)
                     }
-                    .offset(y: -300)
                 }
             }
             
-            Button {
-                whichView = false
-            } label: {
-                Text("이동")
+            if pageIndex == 0 && isInAnimation == nil && drawingViewModel.myDrawing == nil {
+                Button {
+                    whichView = false
+                } label: {
+                    Text("이동")
+                }
             }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background {
-            Image("Home")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
         }
 //        .onAppear {
 //            Task {
 //                await drawingViewModel.getTodayDrawings()
 //            }
 //        }
-        .sheet(isPresented: $isSheetPresented) {
+        .fullScreenCover(isPresented: $isSheetPresented) {
             DrawingImageView()
         }
     }
-}
-
-struct ShootingStarView: View {
-    @EnvironmentObject var authViewModel: AuthViewModel
-    @EnvironmentObject var drawingViewModel: DrawingViewModel
     
-    var body: some View {
-        Image("Star")
+    private var shootingStarView: some View {
+        Image("Starr")
             .resizable()
             .scaledToFit()
             .frame(width: 30, height: 30)
-            .foregroundStyle(.yellow)
             .keyframeAnimator(initialValue: StarAnimValues(), trigger: drawingViewModel.showStar) { content, value in
                 content
                     .scaleEffect(value.scale)
@@ -94,31 +117,31 @@ struct ShootingStarView: View {
             } keyframes: { _ in
                 KeyframeTrack(\.scale) {
                     LinearKeyframe(0.5, duration: 0.1)
-                    SpringKeyframe(1.0, duration: 2.4, spring: .bouncy)
-                    SpringKeyframe(2.0, duration: 0.5, spring: .bouncy)
+                    SpringKeyframe(1.0, duration: 2.0, spring: .bouncy)
+                    SpringKeyframe(2.0, duration: 0.6, spring: .bouncy)
                     SpringKeyframe(1.0, duration: 0.3, spring: .bouncy)
                 }
                 KeyframeTrack(\.opacity) {
-                    LinearKeyframe(0.0, duration: 0.0)
+                    LinearKeyframe(0.0, duration: 0.1)
                     LinearKeyframe(1.0, duration: 0.8)
+                    LinearKeyframe(1.0, duration: 2.0)
+                    LinearKeyframe(0.0, duration: 0.1)
                 }
                 KeyframeTrack(\.yOffset) {
-                    LinearKeyframe(0, duration: 0.0)
-                    LinearKeyframe(-150, duration: 2.0)
+                    LinearKeyframe(0, duration: 0.1)
+                    LinearKeyframe(-150, duration: 1.9)
                     SpringKeyframe(-300, duration: 1.0)
                 }
             }
-//            .onChange(of: drawingViewModel.showStar) {
-//                DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
-//                    Task {
-//                        await drawingViewModel.getMyDrawing(userId: authViewModel.currentUser?.uid)
-//                    }
-//                }
-//            }
+            .onChange(of: drawingViewModel.showStar) {
+                isInAnimation = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) {
+                    isInAnimation = false
+                }
+            }
     }
 }
 
 //#Preview {
 //    NightskyView()
 //}
-

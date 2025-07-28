@@ -19,13 +19,14 @@ extension PKDrawing {
 struct DrawingCanvasView: UIViewRepresentable {
     private let canvasView = PKCanvasView()
     private let toolPicker = PKToolPicker()
+    
+    var viewModel: DrawingViewModel
     @Binding var drawing: PKDrawing
     @Binding var toolPickerShows: Bool
     
-    var viewModel: DrawingViewModel
-    
     var onDrawingChanged: ((PKCanvasView) -> Void)?
     
+    // MARK: - PencilKit
     func makeUIView(context: Context) -> PKCanvasView {
         let backgroundImageView = UIImageView(image: UIImage(named: "Sketchbook"))
         backgroundImageView.contentMode = .scaleAspectFill
