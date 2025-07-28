@@ -23,6 +23,7 @@ struct NightskyView: View {
     
     var body: some View {
         let array = drawingViewModel.pagedDrawings.isEmpty ? [] : Array(drawingViewModel.pagedDrawings[pageIndex].enumerated())
+        let planets = ["Planet1", "Planet2", "Planet3", "Planet4", "Planet5"]
         
         VStack {
             ZStack {
@@ -38,18 +39,10 @@ struct NightskyView: View {
                             drawingViewModel.pagedDrawings[pageIndex][index].viewers.append(authViewModel.currentUserId)
                         }
                     } label: {
-                        if drawing.viewers.contains(authViewModel.currentUserId) {
-                            Image(systemName: "star.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .foregroundStyle(.blue)
-                                .frame(width: 30, height: 30)
-                        } else {
-                            Image("Star")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 100, height: 100)
-                        }
+                        Image(planets[index])
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 100)
                     }
                     .offset(x: offset.x, y: offset.y)
                 }
@@ -68,18 +61,10 @@ struct NightskyView: View {
                                 drawingViewModel.myDrawing?.viewers.append(authViewModel.currentUserId)
                             }
                         } label: {
-                            if myDrawing.viewers.contains(authViewModel.currentUserId) {
-                                Image(systemName: "star.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .foregroundStyle(.blue)
-                                    .frame(width: 30, height: 30)
-                            } else {
-                                Image("Star")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 100, height: 100)
-                            }
+                            Image("Planet5")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
                         }
                         .offset(y: 0)
                     }
@@ -105,7 +90,7 @@ struct NightskyView: View {
     }
     
     private var shootingStarView: some View {
-        Image("Starr")
+        Image("Planet5")
             .resizable()
             .scaledToFit()
             .frame(width: 30, height: 30)

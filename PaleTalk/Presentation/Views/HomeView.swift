@@ -27,7 +27,7 @@ struct HomeView: View {
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background {
-                    Image("Home")
+                    Image("Home_Summer")
                         .resizable()
                         .scaledToFill()
                         .ignoresSafeArea()
