@@ -39,13 +39,13 @@ struct DrawingImageView: View {
                             }
                         } label: {
                             Image(
-                                systemName: drawingViewModel.selectedDrawing.likes.contains(authViewModel.currentUserId) ? "hands.and.sparkles.fill" : "hands.and.sparkles"
+                                drawingViewModel.selectedDrawing.likes.contains(authViewModel.currentUserId) ? "StarFill" : "Star"
                             )
                                 .resizable()
                                 .scaledToFit()
                                 .opacity(drawingViewModel.selectedDrawing.userId != authViewModel.currentUserId ? 1 : 0)
-                                .padding(.vertical, 8)
-                                .padding(.trailing, 12)
+                                .padding(.vertical, 4)
+                                .padding(.trailing, 8)
                         },
                         alignment: .bottomTrailing
                     )
