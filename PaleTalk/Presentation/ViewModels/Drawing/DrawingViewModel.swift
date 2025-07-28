@@ -15,64 +15,164 @@ import Kingfisher
 final class DrawingViewModel: ObservableObject {
     var canvasView: PKCanvasView?
     var toolPicker: PKToolPicker?
-    @Published var showStar = UUID()
+    private let usecase: DrawingUsecase
+    
+    @Published var showStar = UUID() // Shooting Star Trigger
     @Published var starAnimationCompleted = false
-    @Published var drawingList: [Drawing] = []
+    
+    @Published var drawings: [Drawing] = [] // 다른 유저들의 드로잉
+    @Published var pagedDrawings: [[Drawing]] = []
+    
     @Published var myDrawing: Drawing?
     @Published var selectedDrawing: Drawing = Drawing(userId: "", imageUrl: "")
     
-    let fixedOffsets: [CGPoint] = [
-        CGPoint(x: -120, y: -200), // 왼쪽 상단
-        CGPoint(x: 80,   y: -180), // 오른쪽 상단
-        CGPoint(x: -60,  y: -110),  // 왼쪽 중상단
-        CGPoint(x: 140,  y: -130), // 오른쪽 중상단
-    ]
+    var topic: String = "없음"
     
-    private let usecase: DrawingUsecase
+    /// 각 별의 고정 위치 좌표
+    let fixedOffsets: [CGPoint] = [
+        CGPoint(x: -120, y: -120),
+        CGPoint(x: 80,   y: -200),
+        CGPoint(x: -60,  y: 100),
+        CGPoint(x: 140,  y: 130),
+        CGPoint(x: 0,  y: 0),
+    ]
     
     init(usecase: DrawingUsecase) {
         self.usecase = usecase
     }
     
-    func saveDrawing(userId: String?, drawing: PKDrawing) async {
+    // MARK: - FireStore
+    func saveDrawing(userId: String, drawing: PKDrawing) async {
         let bounds = drawing.bounds
         let image = drawing.image(from: bounds, scale: UIScreen.main.scale)
         
-        guard let imageData = image.pngData(), let userId = userId else { return }
+        guard let imageData = image.pngData() else { return }
         
         do {
-            let url = try await usecase.imageUpload(data: imageData)
-            try usecase.saveDrawing(userId: userId, imageUrl: url.absoluteString)
+            let url = try await usecase.uploadImage(data: imageData)
+            myDrawing =  try usecase.saveDrawing(userId: userId, imageUrl: url.absoluteString)
         } catch {
             print("드로잉 저장 중 에러: \(error)")
         }
     }
     
-    func getTodayDrawings(userId: String?) async {
-        guard let userId = userId else { return }
-        
+    func getTodayDrawings(userId: String) async {
         do {
-            drawingList = try await usecase.getTodayDrawings(userId: userId)
+            drawings = try await usecase.getTodayDrawings(userId: userId)
             prefetchImages()
-//            print(drawingList)
+            paginateDrawings()
+//            print(pagedDrawings)
         } catch {
             print("오늘 드로잉 리스트 조회 중 에러: \(error)")
         }
     }
     
-    func getMyDrawing(userId: String?) async {
-        guard let userId = userId else { return }
+    private func paginateDrawings() {
+        var start = 0
+        var arraySize = 4
         
+        while start < drawings.count {
+            let end = min(start + arraySize, drawings.count)
+            pagedDrawings.append(Array(drawings[start..<end]))
+            
+            start = end
+            arraySize = 5
+        }
+    }
+    
+    func getMyDrawing(userId: String) async {
         do {
             myDrawing = try await usecase.getMyDrawing(userId: userId)
-            print(myDrawing)
+            
+            if let myDrawing = myDrawing {
+                let prefetcher = ImagePrefetcher(
+                    urls: [URL(string: myDrawing.imageUrl)!],
+                    options: [.cacheMemoryOnly]
+                )
+                
+                prefetcher.start()
+            }
+//            print(myDrawing)
         } catch {
             print("유저 오늘 드로잉 조회 중 에러: \(error)")
         }
     }
     
+    func updateViewers(userId: String, drawingId: String?) async {
+        guard let drawingId = drawingId else { return }
+        
+        do {
+            try await usecase.updateViews(userId: userId, drawingId: drawingId)
+        } catch {
+            print("드로잉 뷰어 업데이트 중 에러: \(error)")
+        }
+    }
+    
+    func deleteDrawing(userId: String) async {
+        guard let drawingId = selectedDrawing.id else { return }
+        
+        do {
+            try await usecase.deleteDrawing(userId: userId, drawingId: drawingId)
+            myDrawing = nil
+            
+            do {
+                try await usecase.deleteImage(imageUrl: selectedDrawing.imageUrl)
+            } catch {
+                print("스토리지에서 이미지 삭제 중 에러: \(error)")
+                // 로그 남기기 필요
+            }
+        } catch {
+            print("드로잉 삭제 중 에러: \(error)")
+        }
+    }
+    
+    func reportDrawing(userId: String, reason: String) async {
+        guard let drawingId = selectedDrawing.id else { return }
+        
+        do {
+            try await usecase.reportDrawing(userId: userId, drawingId: drawingId, reason: reason)
+        } catch {
+            print("드로잉 신고 중 에러: \(error)")
+        }
+    }
+    
+    func toggleLike(userId: String) async {
+        guard let drawingId = selectedDrawing.id,
+              let (pageIndex, drawingIndex) = pagedDrawings
+                  .enumerated()
+                  .compactMap({ (pageIdx, drawings) in
+                      if let innerIdx = drawings.firstIndex(where: { $0.id == drawingId }) {
+                          return (pageIdx, innerIdx)
+                      }
+                      return nil
+                  })
+                  .first
+        else { return }
+    
+        do {
+            var drawing = pagedDrawings[pageIndex][drawingIndex]
+            var isLiked = false
+            
+            if drawing.likes.contains(userId) {
+                drawing.likes.remove(at: drawing.likes.firstIndex(of: userId)!)
+                isLiked = true
+            } else {
+                drawing.likes.append(userId)
+            }
+            
+            pagedDrawings[pageIndex][drawingIndex] = drawing
+            selectedDrawing = drawing
+            
+            try await usecase.toggleLike(userId: userId, drawingId: drawingId, isLiked: isLiked)
+        } catch {
+            print("드로잉 좋아요 토클 중 에러: \(error)")
+        }
+    }
+    
+    // MARK: - KingFisher
+    /// 이미지 로딩 지연 최소화를 위한 프리페치
     private func prefetchImages() {
-        let urls = drawingList.map { URL(string: $0.imageUrl)! }
+        let urls = drawings.map { URL(string: $0.imageUrl)! }
         
         let prefetcher = ImagePrefetcher(
             urls: urls,
@@ -82,6 +182,7 @@ final class DrawingViewModel: ObservableObject {
         prefetcher.start()
     }
     
+    // MARK: - PencilKit
     func undo() {
         canvasView?.undoManager?.undo()
     }
