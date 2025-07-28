@@ -12,6 +12,7 @@
 		C267099B2E2D3130005D583F /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = C267099A2E2D3130005D583F /* FirebaseFirestore */; };
 		C267099D2E2D3130005D583F /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = C267099C2E2D3130005D583F /* FirebaseStorage */; };
 		C26709A02E2D31B8005D583F /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = C267099F2E2D31B8005D583F /* Kingfisher */; };
+		C2670A952E37B8FD005D583F /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = C2670A942E37B8FD005D583F /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -73,6 +74,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C2670A952E37B8FD005D583F /* FirebaseMessaging in Frameworks */,
 				C26708F02E2D26AD005D583F /* FirebaseAuth in Frameworks */,
 				C267099D2E2D3130005D583F /* FirebaseStorage in Frameworks */,
 				C26708F32E2D26E6005D583F /* GoogleSignIn in Frameworks */,
@@ -143,6 +145,7 @@
 				C267099A2E2D3130005D583F /* FirebaseFirestore */,
 				C267099C2E2D3130005D583F /* FirebaseStorage */,
 				C267099F2E2D31B8005D583F /* Kingfisher */,
+				C2670A942E37B8FD005D583F /* FirebaseMessaging */,
 			);
 			productName = PaleTalk;
 			productReference = C267087F2E2D227B005D583F /* PaleTalk.app */;
@@ -659,6 +662,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C267099E2E2D31B8005D583F /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
+		};
+		C2670A942E37B8FD005D583F /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C26708EE2E2D26AD005D583F /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
