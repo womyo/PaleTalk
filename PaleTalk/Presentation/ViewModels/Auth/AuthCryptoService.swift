@@ -10,6 +10,7 @@ import CryptoKit
 
 class AuthCryptoService {
     
+    // MARK: - 애플 로그인용 nonce 생성 및 SHA256 해시
     static func randomNonceString(length: Int = 32) -> String {
         precondition(length > 0)
         var randomBytes = [UInt8](repeating: 8, count: length)

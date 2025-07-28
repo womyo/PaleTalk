@@ -15,8 +15,12 @@ struct SignInView: View {
             googleLogin
             appleLogin
         }
+        .navigationDestination(isPresented: $viewModel.shouldNavigate) {
+            ProfileSettingView()
+        }
     }
     
+    // MARK: - SubViews
     private var googleLogin: some View {
         Button {
             Task {
@@ -52,4 +56,3 @@ struct SignInView: View {
 #Preview {
     SignInView()
 }
-
