@@ -37,7 +37,7 @@ struct CustomTabView: View {
     init() {
         let appearence = UITabBarAppearance()
         appearence.configureWithOpaqueBackground()
-        appearence.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        appearence.backgroundColor = UIColor.darkGray.withAlphaComponent(0.1)
         
         UITabBar.appearance().standardAppearance = appearence
         UITabBar.appearance().scrollEdgeAppearance = appearence

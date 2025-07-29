@@ -26,16 +26,18 @@ final class DrawingViewModel: ObservableObject {
     @Published var myDrawing: Drawing?
     @Published var selectedDrawing: Drawing = Drawing(userId: "", imageUrl: "")
     
-    var topic: String = "없음"
+    var topic: String = "없음" // 임시
     
     /// 각 별의 고정 위치 좌표
     let fixedOffsets: [CGPoint] = [
         CGPoint(x: -120, y: -120),
         CGPoint(x: 80,   y: -200),
-        CGPoint(x: -60,  y: 100),
-        CGPoint(x: 140,  y: 130),
+        CGPoint(x: 130,  y: 130),
+        CGPoint(x: -100,  y: 100),
         CGPoint(x: 0,  y: 0),
     ]
+    
+    let planets = ["Planet1", "Planet2", "Planet3", "Planet4", "Planet5"]
     
     init(usecase: DrawingUsecase) {
         self.usecase = usecase
