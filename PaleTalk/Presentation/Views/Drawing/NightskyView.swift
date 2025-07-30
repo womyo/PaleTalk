@@ -70,16 +70,27 @@ struct NightskyView: View {
                 }
             }
             
-            VStack {
+            VStack(alignment: .trailing) {
                 Spacer()
                 
                 if pageIndex == 0 && isInAnimation == false && drawingViewModel.myDrawing == nil {
-                    Button {
-                        whichView = false
-                    } label: {
-                        Text("이동")
+                    HStack {
+                        Spacer()
+                        Button {
+                            whichView = false
+                        } label: {
+                            HStack {
+                                Image(systemName: "plus")
+                                Text("그리기")
+                            }
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Color.white.opacity(0.7))
+                            .padding()
+                        }
+                        .background(Color(.main))
+                        .clipShape(RoundedRectangle(cornerRadius: 24))
+                        .padding([.bottom, .trailing], 16)
                     }
-                    .padding(.bottom, 40)
                 }
             }
         }
